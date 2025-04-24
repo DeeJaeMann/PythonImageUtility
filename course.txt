@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+
+from PIL import Image
+from collections import Counter
+import os
+
+src_dir = "/home/student/images"
+dest_dir = "/opt/icons"
+
+for filename in os.listdir(src_dir):
+  file_path = os.path.join(src_dir, filename)
+  if os.path.isfile(file_path):
+    if ".DS_Store" in filename:
+      # Skip this file
+      pass
+    else:
+      print(f'Processing: {filename}')
+
+      src_img = Image.open(file_path).convert('RGBA')
+      pixels = list(src_img.getdata())
+      opaque_pixels = [pixel for pixel in pixels if pixel[3] != 0]
+      color_counts = Counter(opaque_pixels)
+      foreground_color = color_counts.most_common(1)[0][0]
+
+      if 0 in foreground_color:
+        bg_color = (255, 255, 255)
+      else:
+        bg_color = (0, 0, 0)
+
+      background = Image.new('RGBA', src_img.size, bg_color)
+      alpha_composite = Image.alpha_composite(background, src_img)
+
+      new_img = alpha_composite.convert('RGB')
+      new_img = new_img.rotate(270).resize((128,128))
+
+      new_img.save(f'{dest_dir}/{filename}', "JPEG")
